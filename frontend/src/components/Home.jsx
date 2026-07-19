@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { socket } from '../socket';
 import { Gamepad2, Users, ArrowRight, HelpCircle, X, Settings, Type, Timer, Trophy, Camera } from 'lucide-react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 
 export default function Home({ isArabic }) {
   const [searchParams] = useSearchParams();
@@ -15,36 +15,46 @@ export default function Home({ isArabic }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    let scanner = null;
+    let html5QrCode = null;
+    
     if (showScanner) {
-      scanner = new Html5QrcodeScanner(
-        "qr-reader",
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        false
-      );
+      html5QrCode = new Html5Qrcode("qr-reader");
       
-      scanner.render(
+      html5QrCode.start(
+        { facingMode: "environment" }, // Force rear camera
+        { fps: 10, qrbox: { width: 250, height: 250 } },
         (decodedText) => {
           let code = decodedText;
           try {
             const url = new URL(decodedText);
-            const parts = url.pathname.split('/');
-            code = parts[parts.length - 1] || code;
+            // 1. Check for ?room=XYZ
+            const roomParam = url.searchParams.get('room') || url.searchParams.get('ROOM');
+            if (roomParam) {
+              code = roomParam;
+            } else {
+              // 2. Fallback to /room/XYZ
+              const parts = url.pathname.split('/').filter(Boolean);
+              if (parts.length > 0) {
+                code = parts[parts.length - 1];
+              }
+            }
           } catch (e) {
-            // Not a URL, use raw text
+            // Not a valid URL, just use the raw text
           }
           setRoomCode(code.toUpperCase());
           setShowScanner(false);
         },
-        (err) => {
-          // ignore background scan errors
+        (errorMessage) => {
+          // ignore continuous scanning errors
         }
-      );
+      ).catch((err) => {
+        console.error("Failed to start scanner:", err);
+      });
     }
 
     return () => {
-      if (scanner) {
-        scanner.clear().catch(e => console.error(e));
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(e => console.error(e));
       }
     };
   }, [showScanner]);
