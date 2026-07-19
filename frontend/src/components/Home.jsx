@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { socket } from '../socket';
-import { Gamepad2, Users, ArrowRight, HelpCircle, X } from 'lucide-react';
+import { Gamepad2, Users, ArrowRight, HelpCircle, X, Settings, Type, Timer, Trophy } from 'lucide-react';
 
 export default function Home({ isArabic }) {
   const [searchParams] = useSearchParams();
@@ -20,7 +20,7 @@ export default function Home({ isArabic }) {
     }
     
     setIsLoading(true);
-    socket.emit('createRoom', { playerName }, (response) => {
+    socket.emit('createRoom', { playerName, isArabic }, (response) => {
       setIsLoading(false);
       if (response.success) {
         navigate(`/room/${response.roomId}`, { state: { room: response.roomState } });
@@ -200,54 +200,70 @@ export default function Home({ isArabic }) {
               {isArabic ? 'كيف تلعب؟' : 'How to Play'}
             </h2>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
               
-              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-                <div className="flex-center" style={{ background: 'var(--primary-color)', color: '#0a0e1a', borderRadius: '50%', width: '40px', height: '40px', flexShrink: 0, fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 0 15px rgba(168, 85, 247, 0.3)' }}>1</div>
-                <div>
-                  <h3 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem', fontSize: '1.3rem' }}>{isArabic ? 'إعداد الغرفة' : 'Room Setup'}</h3>
-                  <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                    {isArabic 
-                      ? 'يقوم المضيف بإنشاء غرفة وضبط وقت الجولة وإضافة أعمدة مخصصة (اختياري). ثم يشارك الرمز مع الأصدقاء للانضمام.' 
-                      : 'The host creates a room, sets the round time limit, and adds any custom categories. Share the code with friends to join!'}
-                  </p>
+              {/* Step 1 */}
+              <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '16px', position: 'relative', overflow: 'hidden', border: '1px solid rgba(168, 85, 247, 0.1)' }}>
+                <div style={{ position: 'absolute', top: '-10px', right: isArabic ? 'auto' : '-10px', left: isArabic ? '-10px' : 'auto', opacity: 0.05, transform: 'scale(2.5)' }}>
+                  <Settings size={100} />
                 </div>
+                <div className="flex-center" style={{ background: 'var(--primary-color)', color: '#0a0e1a', borderRadius: '12px', width: '48px', height: '48px', marginBottom: '1rem', boxShadow: '0 4px 15px rgba(168, 85, 247, 0.3)' }}>
+                  <Settings size={24} />
+                </div>
+                <h3 style={{ color: 'var(--primary-color)', marginBottom: '0.75rem', fontSize: '1.2rem' }}>1. {isArabic ? 'إعداد الغرفة' : 'Room Setup'}</h3>
+                <p style={{ color: 'var(--text-secondary)', lineHeight: '1.5', fontSize: '0.95rem', position: 'relative', zIndex: 1 }}>
+                  {isArabic 
+                    ? 'يقوم المضيف بإنشاء غرفة وضبط وقت الجولة وإضافة أعمدة مخصصة (اختياري). ثم يشارك الرمز مع الأصدقاء.' 
+                    : 'The host creates a room, sets the round time limit, and adds any custom categories. Share the code with friends!'}
+                </p>
               </div>
 
-              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-                <div className="flex-center" style={{ background: 'var(--primary-color)', color: '#0a0e1a', borderRadius: '50%', width: '40px', height: '40px', flexShrink: 0, fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 0 15px rgba(168, 85, 247, 0.3)' }}>2</div>
-                <div>
-                  <h3 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem', fontSize: '1.3rem' }}>{isArabic ? 'اختيار الحرف' : 'Select a Letter'}</h3>
-                  <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                    {isArabic 
-                      ? 'عند بدء اللعبة، يختار أحد اللاعبين حرفاً لتبدأ الجولة به.' 
-                      : 'When the game starts, one player selects a letter for the round to begin.'}
-                  </p>
+              {/* Step 2 */}
+              <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '16px', position: 'relative', overflow: 'hidden', border: '1px solid rgba(168, 85, 247, 0.1)' }}>
+                <div style={{ position: 'absolute', top: '-10px', right: isArabic ? 'auto' : '-10px', left: isArabic ? '-10px' : 'auto', opacity: 0.05, transform: 'scale(2.5)' }}>
+                  <Type size={100} />
                 </div>
+                <div className="flex-center" style={{ background: 'var(--secondary-color)', color: '#0a0e1a', borderRadius: '12px', width: '48px', height: '48px', marginBottom: '1rem', boxShadow: '0 4px 15px rgba(255, 145, 0, 0.3)' }}>
+                  <Type size={24} />
+                </div>
+                <h3 style={{ color: 'var(--secondary-color)', marginBottom: '0.75rem', fontSize: '1.2rem' }}>2. {isArabic ? 'اختيار الحرف' : 'Select a Letter'}</h3>
+                <p style={{ color: 'var(--text-secondary)', lineHeight: '1.5', fontSize: '0.95rem', position: 'relative', zIndex: 1 }}>
+                  {isArabic 
+                    ? 'عند بدء اللعبة، يختار أحد اللاعبين حرفاً عشوائياً لتبدأ الجولة به.' 
+                    : 'When the game starts, one player selects a letter for the round to begin.'}
+                </p>
               </div>
 
-              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-                <div className="flex-center" style={{ background: 'var(--primary-color)', color: '#0a0e1a', borderRadius: '50%', width: '40px', height: '40px', flexShrink: 0, fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 0 15px rgba(168, 85, 247, 0.3)' }}>3</div>
-                <div>
-                  <h3 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem', fontSize: '1.3rem' }}>{isArabic ? 'السباق مع الزمن' : 'Race Against Time'}</h3>
-                  <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                    {isArabic 
-                      ? 'يجب على جميع اللاعبين كتابة كلمات تبدأ بالحرف المختار لكل عمود (اسم، حيوان، نبات...) قبل انتهاء الوقت!' 
-                      : 'All players race to type words starting with the chosen letter for every column (Name, Animal, Plant...) before the timer runs out!'}
-                  </p>
+              {/* Step 3 */}
+              <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '16px', position: 'relative', overflow: 'hidden', border: '1px solid rgba(168, 85, 247, 0.1)' }}>
+                <div style={{ position: 'absolute', top: '-10px', right: isArabic ? 'auto' : '-10px', left: isArabic ? '-10px' : 'auto', opacity: 0.05, transform: 'scale(2.5)' }}>
+                  <Timer size={100} />
                 </div>
+                <div className="flex-center" style={{ background: 'var(--primary-color)', color: '#0a0e1a', borderRadius: '12px', width: '48px', height: '48px', marginBottom: '1rem', boxShadow: '0 4px 15px rgba(168, 85, 247, 0.3)' }}>
+                  <Timer size={24} />
+                </div>
+                <h3 style={{ color: 'var(--primary-color)', marginBottom: '0.75rem', fontSize: '1.2rem' }}>3. {isArabic ? 'السباق مع الزمن' : 'Race Against Time'}</h3>
+                <p style={{ color: 'var(--text-secondary)', lineHeight: '1.5', fontSize: '0.95rem', position: 'relative', zIndex: 1 }}>
+                  {isArabic 
+                    ? 'تسابق مع البقية لكتابة كلمات تبدأ بالحرف المختار لكل عمود (اسم، حيوان، نبات...) قبل انتهاء الوقت!' 
+                    : 'Race to type words starting with the chosen letter for every column (Name, Animal, Plant...) before the timer runs out!'}
+                </p>
               </div>
 
-              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-                <div className="flex-center" style={{ background: 'var(--primary-color)', color: '#0a0e1a', borderRadius: '50%', width: '40px', height: '40px', flexShrink: 0, fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 0 15px rgba(168, 85, 247, 0.3)' }}>4</div>
-                <div>
-                  <h3 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem', fontSize: '1.3rem' }}>{isArabic ? 'المراجعة والنقاط' : 'Review & Scoring'}</h3>
-                  <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                    {isArabic 
-                      ? 'بعد كل جولة، يراجع المضيف الإجابات ويعدل النقاط إذا لزم الأمر. الإجابة الفريدة = 10 نقاط، الإجابة المكررة = 5 نقاط.' 
-                      : 'After each round, the host reviews the answers and can edit points. Unique answer = 10 pts, duplicate answer = 5 pts.'}
-                  </p>
+              {/* Step 4 */}
+              <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '16px', position: 'relative', overflow: 'hidden', border: '1px solid rgba(168, 85, 247, 0.1)' }}>
+                <div style={{ position: 'absolute', top: '-10px', right: isArabic ? 'auto' : '-10px', left: isArabic ? '-10px' : 'auto', opacity: 0.05, transform: 'scale(2.5)' }}>
+                  <Trophy size={100} />
                 </div>
+                <div className="flex-center" style={{ background: 'var(--secondary-color)', color: '#0a0e1a', borderRadius: '12px', width: '48px', height: '48px', marginBottom: '1rem', boxShadow: '0 4px 15px rgba(255, 145, 0, 0.3)' }}>
+                  <Trophy size={24} />
+                </div>
+                <h3 style={{ color: 'var(--secondary-color)', marginBottom: '0.75rem', fontSize: '1.2rem' }}>4. {isArabic ? 'المراجعة والنقاط' : 'Review & Scoring'}</h3>
+                <p style={{ color: 'var(--text-secondary)', lineHeight: '1.5', fontSize: '0.95rem', position: 'relative', zIndex: 1 }}>
+                  {isArabic 
+                    ? 'يراجع المضيف الإجابات ويعدل النقاط إذا لزم الأمر. إجابة فريدة = 10 نقاط، إجابة مكررة = 5 نقاط.' 
+                    : 'The host reviews the answers and edits points. Unique answer = 10 pts, duplicate answer = 5 pts.'}
+                </p>
               </div>
 
             </div>

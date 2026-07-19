@@ -118,10 +118,14 @@ io.on('connection', (socket) => {
     next();
   });
 
-  socket.on('createRoom', ({ playerName, customColumns }, callback) => {
+  socket.on('createRoom', ({ playerName, isArabic, customColumns }, callback) => {
     // String Length Limits
     playerName = String(playerName).substring(0, 30);
     const safeColumns = (customColumns || []).map(col => String(col).substring(0, 30)).slice(0, 10);
+
+    const standardColumns = isArabic
+      ? ['اسم', 'حيوان', 'نبات', 'جماد', 'بلاد/عاصمة']
+      : ['Name', 'Animal', 'Plant', 'Object', 'Country/Capital'];
 
     const roomId = generateRoomCode();
     
@@ -134,6 +138,7 @@ io.on('connection', (socket) => {
       ],
       settings: {
         timeLimit: 60,
+        standardColumns,
         customColumns: safeColumns
       },
       status: 'lobby', // lobby, playing, reviewing, finished

@@ -14,11 +14,7 @@ export default function Game({ room, isArabic }) {
   const isMyTurn = room.players[room.currentTurnIndex]?.id === playerId;
   const turnPlayer = room.players[room.currentTurnIndex];
 
-  const standardColumns = isArabic 
-    ? ['اسم', 'حيوان', 'نبات', 'جماد', 'بلاد/عاصمة'] 
-    : ['Name', 'Animal', 'Plant', 'Object', 'Country/Capital'];
-  
-  const allColumns = [...standardColumns, ...room.settings.customColumns];
+  const allColumns = [...(room.settings.standardColumns || []), ...room.settings.customColumns];
 
   useEffect(() => {
     if (room.round.endTime) {
@@ -86,21 +82,37 @@ export default function Game({ room, isArabic }) {
   }
 
   // The Playing View
+  const getLocalizedColumn = (colName) => {
+    const ar = ['اسم', 'حيوان', 'نبات', 'جماد', 'بلاد/عاصمة'];
+    const en = ['Name', 'Animal', 'Plant', 'Object', 'Country/Capital'];
+    if (isArabic) {
+      const idx = en.indexOf(colName);
+      if (idx !== -1) return ar[idx];
+    } else {
+      const idx = ar.indexOf(colName);
+      if (idx !== -1) return en[idx];
+    }
+    return colName;
+  };
+
   return (
     <div style={{ padding: '2rem 0' }}>
-      <div className="flex-between fade-in-up" style={{ marginBottom: '2rem' }}>
-        <div className="glass-panel flex-center pulse-glow float" style={{ width: '100px', height: '100px', borderRadius: '50%', padding: 0 }}>
-          <span className="glow-text" style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>
+      <div className="flex-between" style={{ marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <h2 style={{ margin: 0 }}>
+          {isArabic ? 'حرف الجولة:' : 'Round Letter:'}{' '}
+          <span className="glow-text float" style={{ display: 'inline-block', fontSize: '3rem', color: 'var(--primary-color)', marginLeft: isArabic ? 0 : '1rem', marginRight: isArabic ? '1rem' : 0 }}>
             {room.round.letter}
           </span>
-        </div>
-
-        <div className={`glass-panel flex-center ${timeLeft <= 10 ? 'timer-critical' : ''}`} style={{ gap: '1rem', padding: '1rem 2rem' }}>
-          <Clock size={32} color={timeLeft <= 10 ? 'var(--danger-color)' : 'white'} />
+        </h2>
+        
+        <div className={`glass-panel ${timeLeft <= 10 ? 'timer-critical' : ''}`} style={{ padding: '1rem 2rem' }}>
+          <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+            {isArabic ? 'الوقت المتبقي' : 'Time Remaining'}
+          </div>
           <span style={{ 
-            fontSize: '2.5rem', 
-            fontWeight: 'bold',
-            color: timeLeft <= 10 ? 'var(--danger-color)' : 'white'
+            fontSize: '2rem', 
+            fontWeight: 'bold', 
+            color: timeLeft <= 10 ? 'var(--danger-color)' : 'var(--success-color)'
           }}>
             {timeLeft}
           </span>
@@ -119,7 +131,7 @@ export default function Game({ room, isArabic }) {
             {allColumns.map(col => (
               <div key={col}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-                  {col}
+                  {getLocalizedColumn(col)}
                 </label>
                 <input
                   type="text"

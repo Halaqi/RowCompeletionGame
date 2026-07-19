@@ -1,10 +1,7 @@
-import { useState } from 'react';
 import { socket, playerId } from '../socket';
 import { CheckCircle2, MessageSquare, Flag } from 'lucide-react';
 
 export default function Review({ room, isArabic }) {
-  const [selectedPlayerId, setSelectedPlayerId] = useState(room.players[0]?.id);
-  
   const isReady = room.round.readyPlayers?.includes(playerId);
   const currentPlayer = room.players.find(p => p.id === playerId);
   const isHost = currentPlayer?.isHost;
@@ -23,11 +20,21 @@ export default function Review({ room, isArabic }) {
     }
   };
 
+  const getLocalizedColumn = (colName) => {
+    const ar = ['اسم', 'حيوان', 'نبات', 'جماد', 'بلاد/عاصمة'];
+    const en = ['Name', 'Animal', 'Plant', 'Object', 'Country/Capital'];
+    if (isArabic) {
+      const idx = en.indexOf(colName);
+      if (idx !== -1) return ar[idx];
+    } else {
+      const idx = ar.indexOf(colName);
+      if (idx !== -1) return en[idx];
+    }
+    return colName;
+  };
+
   // Group columns from the host's settings
-  const standardColumns = isArabic 
-    ? ['اسم', 'حيوان', 'نبات', 'جماد', 'بلاد/عاصمة'] 
-    : ['Name', 'Animal', 'Plant', 'Object', 'Country/Capital'];
-  const allColumns = [...standardColumns, ...room.settings.customColumns];
+  const allColumns = [...(room.settings.standardColumns || []), ...room.settings.customColumns];
 
   return (
     <div style={{ padding: '2rem 0' }}>
@@ -42,106 +49,95 @@ export default function Review({ room, isArabic }) {
           : (isArabic ? 'ناقش الإجابات مع المضيف لتعديل النقاط إذا لزم الأمر.' : 'Discuss answers with the Host to adjust points if necessary.')}
       </p>
 
-      {/* Tab Bar */}
-      <div style={{ display: 'flex', overflowX: 'auto', gap: '0.5rem', paddingBottom: '1rem', marginBottom: '2rem' }}>
-        {room.players.map(player => (
-          <button
-            key={player.id}
-            onClick={() => setSelectedPlayerId(player.id)}
-            style={{
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              border: 'none',
-              background: selectedPlayerId === player.id ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)',
-              color: selectedPlayerId === player.id ? '#0a0e1a' : 'white',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'all 0.2s'
-            }}
-          >
-            {player.name} {player.id === playerId && (isArabic ? '(أنت)' : '(You)')}
-            {room.round.readyPlayers?.includes(player.id) && (
-              <CheckCircle2 size={16} style={{ color: selectedPlayerId === player.id ? '#0a0e1a' : 'var(--success-color)' }} />
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Selected Player Content */}
-      <div style={{ marginBottom: '3rem' }}>
-        {(() => {
-          const player = room.players.find(p => p.id === selectedPlayerId) || room.players[0];
-          if (!player) return null;
-          
-          const playerScores = room.round.scores[player.id];
-          const totalPoints = playerScores 
-            ? Object.values(playerScores).reduce((sum, item) => sum + item.points, 0)
-            : 0;
-
-          return (
-            <div className="glass-panel fade-in" style={{ border: '1px solid rgba(168, 85, 247, 0.25)' }}>
-              <div className="flex-between" style={{ marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
-                <h3 style={{ margin: 0 }}>
-                  {isArabic ? `إجابات ${player.name}` : `${player.name}'s Answers`}
-                </h3>
-                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>
-                  {totalPoints} {isArabic ? 'نقطة' : 'pts'}
-                </span>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-                {allColumns.map(col => {
+      {/* Table UI */}
+      <div className="glass-panel fade-in" style={{ overflowX: 'auto', marginBottom: '3rem', padding: '1rem' }}>
+        <table style={{ width: '100%', minWidth: '600px', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{ padding: '1rem', borderBottom: '2px solid rgba(168, 85, 247, 0.3)', textAlign: isArabic ? 'right' : 'left', color: 'var(--text-secondary)' }}>
+                {isArabic ? 'الفئة' : 'Category'}
+              </th>
+              {room.players.map(player => {
+                const playerScores = room.round.scores[player.id];
+                const totalPoints = playerScores 
+                  ? Object.values(playerScores).reduce((sum, item) => sum + item.points, 0)
+                  : 0;
+                
+                return (
+                  <th key={player.id} style={{ padding: '1rem', borderBottom: '2px solid rgba(168, 85, 247, 0.3)', textAlign: 'center', minWidth: '150px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontWeight: 'bold', color: player.id === playerId ? 'var(--primary-color)' : 'var(--text-primary)' }}>
+                        {player.name} {player.id === playerId && (isArabic ? '(أنت)' : '(You)')}
+                      </span>
+                      <span style={{ fontSize: '1.2rem', color: 'var(--primary-color)' }}>
+                        {totalPoints} {isArabic ? 'نقطة' : 'pts'}
+                      </span>
+                      {room.round.readyPlayers?.includes(player.id) && (
+                        <CheckCircle2 size={16} style={{ color: 'var(--success-color)' }} />
+                      )}
+                    </div>
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {allColumns.map(col => (
+              <tr key={col} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <td style={{ padding: '1rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+                  {getLocalizedColumn(col)}
+                </td>
+                {room.players.map(player => {
+                  const playerScores = room.round.scores[player.id];
                   const item = playerScores?.[col] || { answer: '', points: 0 };
                   
                   return (
-                    <div key={col} style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>{col}</div>
-                      <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', minHeight: '1.5rem', color: item.answer ? 'white' : 'var(--danger-color)' }}>
-                        {item.answer || (isArabic ? '--- فارغ ---' : '--- empty ---')}
+                    <td key={player.id} style={{ padding: '1rem', textAlign: 'center' }}>
+                      <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', minHeight: '80px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: item.answer ? 'var(--text-primary)' : 'var(--danger-color)', wordBreak: 'break-word' }}>
+                          {item.answer || (isArabic ? '--- فارغ ---' : '--- empty ---')}
+                        </div>
+                        
+                        {isHost && !isReady ? (
+                          <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+                            {[0, 5, 10].map(pt => (
+                              <button
+                                key={pt}
+                                onClick={() => handleEditScore(player.id, col, pt)}
+                                style={{
+                                  flex: 1,
+                                  maxWidth: '40px',
+                                  padding: '0.25rem',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  background: item.points === pt ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)',
+                                  color: item.points === pt ? '#0a0e1a' : 'white',
+                                  cursor: 'pointer',
+                                  fontSize: '0.9rem',
+                                  fontWeight: 'bold'
+                                }}
+                              >
+                                {pt}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{ 
+                            color: item.points === 10 ? 'var(--success-color)' : item.points === 5 ? 'var(--primary-color)' : 'var(--danger-color)',
+                            fontWeight: 'bold',
+                            marginTop: 'auto'
+                          }}>
+                            {item.points} {isArabic ? 'نقطة' : 'pts'}
+                          </div>
+                        )}
                       </div>
-                      
-                      {isHost && !isReady ? (
-                        <div style={{ display: 'flex', gap: '0.25rem' }}>
-                          {[0, 5, 10].map(pt => (
-                            <button
-                              key={pt}
-                              onClick={() => handleEditScore(player.id, col, pt)}
-                              style={{
-                                flex: 1,
-                                padding: '0.25rem',
-                                border: 'none',
-                                borderRadius: '4px',
-                                background: item.points === pt ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)',
-                                color: item.points === pt ? '#0a0e1a' : 'white',
-                                cursor: 'pointer',
-                                fontSize: '0.9rem',
-                                fontWeight: 'bold'
-                              }}
-                            >
-                              {pt}
-                            </button>
-                          ))}
-                        </div>
-                      ) : (
-                        <div style={{ 
-                          color: item.points === 10 ? 'var(--success-color)' : item.points === 5 ? 'var(--primary-color)' : 'var(--danger-color)',
-                          fontWeight: 'bold'
-                        }}>
-                          {item.points} {isArabic ? 'نقطة' : 'pts'}
-                        </div>
-                      )}
-                    </div>
+                    </td>
                   );
                 })}
-              </div>
-            </div>
-          );
-        })()}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       <div className="flex-center" style={{ position: 'sticky', bottom: '2rem', gap: '1rem' }}>

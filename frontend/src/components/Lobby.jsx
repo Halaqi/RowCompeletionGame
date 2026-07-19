@@ -16,9 +16,9 @@ export default function Lobby({ isArabic }) {
   const [showQR, setShowQR] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
 
-  const standardColumns = isArabic 
+  const standardColumns = room?.settings?.standardColumns || (isArabic 
     ? ['اسم', 'حيوان', 'نبات', 'جماد', 'بلاد/عاصمة'] 
-    : ['Name', 'Animal', 'Plant', 'Object', 'Country/Capital'];
+    : ['Name', 'Animal', 'Plant', 'Object', 'Country/Capital']);
 
   useEffect(() => {
     if (!room) {
@@ -208,8 +208,8 @@ export default function Lobby({ isArabic }) {
             </label>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem', lineHeight: '1.5' }}>
               {isArabic 
-                ? `الأعمدة الأساسية هي (${standardColumns.join('، ')}). إذا كنت ترغب في إضافة عمود جديد، يمكنك إضافته من هنا:`
-                : `The standard columns are (${standardColumns.join(', ')}). If you wish to add a custom column, add it from here:`}
+                ? `الأعمدة الأساسية هي (${standardColumns.map(getLocalizedColumn).join('، ')}). إذا كنت ترغب في إضافة عمود جديد، يمكنك إضافته من هنا:`
+                : `The standard columns are (${standardColumns.map(getLocalizedColumn).join(', ')}). If you wish to add a custom column, add it from here:`}
             </p>
           </div>
 
