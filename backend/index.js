@@ -161,6 +161,10 @@ io.on('connection', (socket) => {
       return callback({ success: false, message: 'Game already started' });
     }
 
+    if (room.players.length >= 10) {
+      return callback({ success: false, message: 'Room is full (max 10 players)' });
+    }
+
     const newPlayer = { id: socket.playerId, name: playerName, isHost: false, totalScore: 0 };
     room.players.push(newPlayer);
     socket.join(roomId);

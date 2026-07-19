@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { socket } from '../socket';
-import { Gamepad2, Users, ArrowRight, HelpCircle, X, Settings, Type, Timer, Trophy } from 'lucide-react';
+import { Gamepad2, Users, ArrowRight, HelpCircle, X, Settings, Type, Timer, Trophy, Camera } from 'lucide-react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
 export default function Home({ isArabic }) {
   const [searchParams] = useSearchParams();
@@ -10,8 +11,43 @@ export default function Home({ isArabic }) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    let scanner = null;
+    if (showScanner) {
+      scanner = new Html5QrcodeScanner(
+        "qr-reader",
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        false
+      );
+      
+      scanner.render(
+        (decodedText) => {
+          let code = decodedText;
+          try {
+            const url = new URL(decodedText);
+            const parts = url.pathname.split('/');
+            code = parts[parts.length - 1] || code;
+          } catch (e) {
+            // Not a URL, use raw text
+          }
+          setRoomCode(code.toUpperCase());
+          setShowScanner(false);
+        },
+        (err) => {
+          // ignore background scan errors
+        }
+      );
+    }
+
+    return () => {
+      if (scanner) {
+        scanner.clear().catch(e => console.error(e));
+      }
+    };
+  }, [showScanner]);
   const handleCreateRoom = (e) => {
     e.preventDefault();
     if (!playerName.trim()) {
@@ -102,6 +138,14 @@ export default function Home({ isArabic }) {
               style={{ flex: 2, textTransform: 'uppercase' }}
             />
             <button 
+              className="btn" 
+              style={{ padding: '0.75rem', background: 'rgba(168, 85, 247, 0.15)', border: '1px solid rgba(168, 85, 247, 0.3)', color: 'white', borderRadius: '12px' }}
+              onClick={() => setShowScanner(true)}
+              title={isArabic ? 'مسح رمز QR' : 'Scan QR Code'}
+            >
+              <Camera size={20} />
+            </button>
+            <button 
               className="btn btn-secondary" 
               style={{ flex: 1 }}
               onClick={handleJoinRoom}
@@ -147,6 +191,63 @@ export default function Home({ isArabic }) {
           </a>
         </div>
       </div>
+
+      {showScanner && (
+        <div 
+          className="fade-in"
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(10, 14, 26, 0.95)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 100,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onClick={() => setShowScanner(false)}
+        >
+          <div 
+            className="glass-panel fade-in-up" 
+            style={{ 
+              maxWidth: '450px', 
+              width: '90%', 
+              position: 'relative',
+              padding: '1.5rem',
+              background: 'white' // html5-qrcode works best on white background
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setShowScanner(false)}
+              style={{
+                position: 'absolute',
+                top: '-15px',
+                right: '-15px',
+                background: 'var(--danger-color)',
+                border: 'none',
+                color: 'white',
+                borderRadius: '50%',
+                width: '36px',
+                height: '36px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10
+              }}
+            >
+              <X size={20} />
+            </button>
+            
+            <h3 style={{ textAlign: 'center', color: '#1e1e2e', marginBottom: '1rem' }}>
+              {isArabic ? 'قم بمسح رمز الغرفة' : 'Scan Room QR Code'}
+            </h3>
+            
+            <div id="qr-reader" style={{ width: '100%' }}></div>
+          </div>
+        </div>
+      )}
 
       {showGuide && (
         <div 

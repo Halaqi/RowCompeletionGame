@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Cairo:wght@400;700;800&display=swap');
 
 :root {
-  --primary-color: #a855f7;
+  --primary-color: #f46e00;
   --primary-hover: #7c3aed;
   --primary-dark: #4c1d95;
   --secondary-color: #ff9100;
@@ -518,4 +518,55 @@ body.light-mode .glow-text {
   text-shadow:
     0 0 10px rgba(168, 85, 247, 0.3),
     0 0 30px rgba(168, 85, 247, 0.15);
+}
+
+/* ─── Scanner Overrides ─── */
+#qr-reader {
+  border: none !important;
+}
+
+#qr-reader button {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+  color: #0a0e1a !important;
+  border: none !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 30px !important;
+  font-weight: bold !important;
+  font-family: inherit !important;
+  cursor: pointer !important;
+  margin-top: 1rem !important;
+  box-shadow: 0 4px 15px rgb(240, 141, 2) !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+}
+
+#qr-reader button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgb(163, 100, 11) !important;
+}
+
+#qr-reader select {
+  width: 100% !important;
+  padding: 0.75rem !important;
+  border-radius: 12px !important;
+  border: 2px solid rgb(140, 84, 0) !important;
+  background: rgba(0,0,0,0.02) !important;
+  color: #1e1e2e !important;
+  font-family: inherit !important;
+  font-weight: 600 !important;
+  margin-bottom: 1rem !important;
+  outline: none !important;
+  transition: border-color 0.3s !important;
+}
+
+#qr-reader select:focus {
+  border-color: var(--primary-color) !important;
+}
+
+#qr-reader a {
+  display: none !important; /* Hide "powered by" link for cleaner look */
+}
+
+#qr-reader span,
+#qr-reader div {
+  color: #a28500 !important;
 }
