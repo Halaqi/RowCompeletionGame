@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { socket } from '../socket';
-import { Gamepad2, Users, ArrowRight } from 'lucide-react';
+import { Gamepad2, Users, ArrowRight, HelpCircle, X } from 'lucide-react';
 
 export default function Home({ isArabic }) {
   const [searchParams] = useSearchParams();
@@ -9,6 +9,7 @@ export default function Home({ isArabic }) {
   const [roomCode, setRoomCode] = useState(searchParams.get('room') || '');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const navigate = useNavigate();
 
   const handleCreateRoom = (e) => {
@@ -111,6 +112,29 @@ export default function Home({ isArabic }) {
           </div>
         </div>
 
+        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <button 
+            onClick={() => setShowGuide(true)}
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'var(--text-secondary)', 
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontSize: '1rem',
+              transition: 'color 0.2s',
+              fontFamily: 'inherit'
+            }}
+            onMouseOver={(e) => e.target.style.color = 'var(--primary-color)'}
+            onMouseOut={(e) => e.target.style.color = 'var(--text-secondary)'}
+          >
+            <HelpCircle size={20} />
+            {isArabic ? 'كيف تلعب؟' : 'How to Play'}
+          </button>
+        </div>
+
         <div style={{ marginTop: '3rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
           {isArabic ? 'بناء وتطوير المهندس: ' : 'Built and developed by Eng. '}
           <a 
@@ -123,6 +147,120 @@ export default function Home({ isArabic }) {
           </a>
         </div>
       </div>
+
+      {showGuide && (
+        <div 
+          className="flex-center fade-in" 
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0, 0, 0, 0.8)',
+            zIndex: 100,
+            padding: '1rem'
+          }}
+          onClick={() => setShowGuide(false)}
+        >
+          <div 
+            className="glass-panel" 
+            style={{ 
+              maxWidth: '600px', 
+              width: '100%', 
+              maxHeight: '90vh', 
+              overflowY: 'auto',
+              position: 'relative',
+              padding: '2.5rem'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setShowGuide(false)}
+              style={{
+                position: 'absolute',
+                top: '1.5rem',
+                right: '1.5rem',
+                background: 'rgba(255,255,255,0.1)',
+                border: 'none',
+                color: 'white',
+                borderRadius: '50%',
+                width: '36px',
+                height: '36px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background 0.2s'
+              }}
+              onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
+              onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+            >
+              <X size={20} />
+            </button>
+            
+            <h2 className="gradient-text" style={{ textAlign: 'center', marginBottom: '2.5rem', fontSize: '2rem' }}>
+              {isArabic ? 'كيف تلعب؟' : 'How to Play'}
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              
+              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+                <div className="flex-center" style={{ background: 'var(--primary-color)', color: '#0a0e1a', borderRadius: '50%', width: '40px', height: '40px', flexShrink: 0, fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 0 15px rgba(168, 85, 247, 0.3)' }}>1</div>
+                <div>
+                  <h3 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem', fontSize: '1.3rem' }}>{isArabic ? 'إعداد الغرفة' : 'Room Setup'}</h3>
+                  <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                    {isArabic 
+                      ? 'يقوم المضيف بإنشاء غرفة وضبط وقت الجولة وإضافة أعمدة مخصصة (اختياري). ثم يشارك الرمز مع الأصدقاء للانضمام.' 
+                      : 'The host creates a room, sets the round time limit, and adds any custom categories. Share the code with friends to join!'}
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+                <div className="flex-center" style={{ background: 'var(--primary-color)', color: '#0a0e1a', borderRadius: '50%', width: '40px', height: '40px', flexShrink: 0, fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 0 15px rgba(168, 85, 247, 0.3)' }}>2</div>
+                <div>
+                  <h3 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem', fontSize: '1.3rem' }}>{isArabic ? 'اختيار الحرف' : 'Select a Letter'}</h3>
+                  <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                    {isArabic 
+                      ? 'عند بدء اللعبة، يختار أحد اللاعبين حرفاً لتبدأ الجولة به.' 
+                      : 'When the game starts, one player selects a letter for the round to begin.'}
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+                <div className="flex-center" style={{ background: 'var(--primary-color)', color: '#0a0e1a', borderRadius: '50%', width: '40px', height: '40px', flexShrink: 0, fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 0 15px rgba(168, 85, 247, 0.3)' }}>3</div>
+                <div>
+                  <h3 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem', fontSize: '1.3rem' }}>{isArabic ? 'السباق مع الزمن' : 'Race Against Time'}</h3>
+                  <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                    {isArabic 
+                      ? 'يجب على جميع اللاعبين كتابة كلمات تبدأ بالحرف المختار لكل عمود (اسم، حيوان، نبات...) قبل انتهاء الوقت!' 
+                      : 'All players race to type words starting with the chosen letter for every column (Name, Animal, Plant...) before the timer runs out!'}
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+                <div className="flex-center" style={{ background: 'var(--primary-color)', color: '#0a0e1a', borderRadius: '50%', width: '40px', height: '40px', flexShrink: 0, fontWeight: 'bold', fontSize: '1.2rem', boxShadow: '0 0 15px rgba(168, 85, 247, 0.3)' }}>4</div>
+                <div>
+                  <h3 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem', fontSize: '1.3rem' }}>{isArabic ? 'المراجعة والنقاط' : 'Review & Scoring'}</h3>
+                  <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                    {isArabic 
+                      ? 'بعد كل جولة، يراجع المضيف الإجابات ويعدل النقاط إذا لزم الأمر. الإجابة الفريدة = 10 نقاط، الإجابة المكررة = 5 نقاط.' 
+                      : 'After each round, the host reviews the answers and can edit points. Unique answer = 10 pts, duplicate answer = 5 pts.'}
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            <div style={{ marginTop: '3rem', textAlign: 'center' }}>
+              <button className="btn btn-primary" onClick={() => setShowGuide(false)} style={{ padding: '0.75rem 3rem' }}>
+                {isArabic ? 'فهمت ذلك! لنلعب' : 'Got it! Let\'s Play'}
+              </button>
+            </div>
+            
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,14 +1,16 @@
-import { socket } from '../socket';
+import { useState } from 'react';
+import { socket, playerId } from '../socket';
 import { CheckCircle2, MessageSquare, Flag } from 'lucide-react';
 
 export default function Review({ room, isArabic }) {
-  const isReady = room.round.readyPlayers?.includes(socket.id);
-  const currentPlayer = room.players.find(p => p.id === socket.id);
-  const isHost = currentPlayer?.isHost;
-  const myScores = room.round.scores[socket.id];
+  const [selectedPlayerId, setSelectedPlayerId] = useState(room.players[0]?.id);
   
-  const handleEditScore = (column, newPoints) => {
-    socket.emit('editScore', { roomId: room.id, column, points: newPoints });
+  const isReady = room.round.readyPlayers?.includes(playerId);
+  const currentPlayer = room.players.find(p => p.id === playerId);
+  const isHost = currentPlayer?.isHost;
+  
+  const handleEditScore = (targetPlayerId, column, newPoints) => {
+    socket.emit('editScore', { roomId: room.id, targetPlayerId, column, points: newPoints });
   };
 
   const handleReady = () => {
@@ -35,29 +37,57 @@ export default function Review({ room, isArabic }) {
       </h2>
       
       <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-        {isArabic 
-          ? 'ناقش الإجابات مع المضيف. تم حساب النقاط تلقائياً (10 للفريدة، 5 للمكررة). يمكنك تعديل نقاطك إذا كانت إجابتك خاطئة.' 
-          : 'Discuss answers with the host. Points were auto-calculated (10 for unique, 5 for duplicate). You can edit your points if your answer was invalid.'}
+        {isHost 
+          ? (isArabic ? 'بصفتك المضيف، أنت وحدك من يمكنه تعديل نقاط اللاعبين إذا كانت إجاباتهم غير صحيحة.' : 'As the Host, only you can edit player points if their answers are invalid.')
+          : (isArabic ? 'ناقش الإجابات مع المضيف لتعديل النقاط إذا لزم الأمر.' : 'Discuss answers with the Host to adjust points if necessary.')}
       </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', marginBottom: '3rem' }}>
-        {room.players.map(player => {
-          const isMe = player.id === socket.id;
+      {/* Tab Bar */}
+      <div style={{ display: 'flex', overflowX: 'auto', gap: '0.5rem', paddingBottom: '1rem', marginBottom: '2rem' }}>
+        {room.players.map(player => (
+          <button
+            key={player.id}
+            onClick={() => setSelectedPlayerId(player.id)}
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              border: 'none',
+              background: selectedPlayerId === player.id ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)',
+              color: selectedPlayerId === player.id ? '#0a0e1a' : 'white',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.2s'
+            }}
+          >
+            {player.name} {player.id === playerId && (isArabic ? '(أنت)' : '(You)')}
+            {room.round.readyPlayers?.includes(player.id) && (
+              <CheckCircle2 size={16} style={{ color: selectedPlayerId === player.id ? '#0a0e1a' : 'var(--success-color)' }} />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Selected Player Content */}
+      <div style={{ marginBottom: '3rem' }}>
+        {(() => {
+          const player = room.players.find(p => p.id === selectedPlayerId) || room.players[0];
+          if (!player) return null;
+          
           const playerScores = room.round.scores[player.id];
           const totalPoints = playerScores 
             ? Object.values(playerScores).reduce((sum, item) => sum + item.points, 0)
             : 0;
 
           return (
-            <div key={player.id} className="glass-panel" style={{ 
-              border: isMe ? '2px solid var(--primary-color)' : '1px solid rgba(255,255,255,0.1)'
-            }}>
+            <div className="glass-panel fade-in" style={{ border: '1px solid rgba(168, 85, 247, 0.25)' }}>
               <div className="flex-between" style={{ marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
                 <h3 style={{ margin: 0 }}>
-                  {player.name} {isMe && (isArabic ? '(أنت)' : '(You)')}
-                  {room.round.readyPlayers?.includes(player.id) && (
-                    <CheckCircle2 size={20} color="var(--success-color)" style={{ verticalAlign: 'middle', margin: '0 0.5rem' }} />
-                  )}
+                  {isArabic ? `إجابات ${player.name}` : `${player.name}'s Answers`}
                 </h3>
                 <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>
                   {totalPoints} {isArabic ? 'نقطة' : 'pts'}
@@ -69,27 +99,28 @@ export default function Review({ room, isArabic }) {
                   const item = playerScores?.[col] || { answer: '', points: 0 };
                   
                   return (
-                    <div key={col} style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
+                    <div key={col} style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px' }}>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>{col}</div>
-                      <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', minHeight: '1.5rem' }}>
+                      <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', minHeight: '1.5rem', color: item.answer ? 'white' : 'var(--danger-color)' }}>
                         {item.answer || (isArabic ? '--- فارغ ---' : '--- empty ---')}
                       </div>
                       
-                      {isMe && !isReady ? (
+                      {isHost && !isReady ? (
                         <div style={{ display: 'flex', gap: '0.25rem' }}>
                           {[0, 5, 10].map(pt => (
                             <button
                               key={pt}
-                              onClick={() => handleEditScore(col, pt)}
+                              onClick={() => handleEditScore(player.id, col, pt)}
                               style={{
                                 flex: 1,
                                 padding: '0.25rem',
                                 border: 'none',
                                 borderRadius: '4px',
                                 background: item.points === pt ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)',
-                                color: 'white',
+                                color: item.points === pt ? '#0a0e1a' : 'white',
                                 cursor: 'pointer',
-                                fontSize: '0.9rem'
+                                fontSize: '0.9rem',
+                                fontWeight: 'bold'
                               }}
                             >
                               {pt}
@@ -98,7 +129,7 @@ export default function Review({ room, isArabic }) {
                         </div>
                       ) : (
                         <div style={{ 
-                          color: item.points === 10 ? 'var(--success-color)' : item.points === 5 ? 'var(--secondary-color)' : 'var(--danger-color)',
+                          color: item.points === 10 ? 'var(--success-color)' : item.points === 5 ? 'var(--primary-color)' : 'var(--danger-color)',
                           fontWeight: 'bold'
                         }}>
                           {item.points} {isArabic ? 'نقطة' : 'pts'}
@@ -110,7 +141,7 @@ export default function Review({ room, isArabic }) {
               </div>
             </div>
           );
-        })}
+        })()}
       </div>
 
       <div className="flex-center" style={{ position: 'sticky', bottom: '2rem', gap: '1rem' }}>

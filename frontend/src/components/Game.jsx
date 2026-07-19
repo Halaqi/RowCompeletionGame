@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { socket } from '../socket';
+import { socket, playerId } from '../socket';
 import { Clock, Send } from 'lucide-react';
 
 const ARABIC_LETTERS = ['أ', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ', 'ر', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ك', 'ل', 'م', 'ن', 'هـ', 'و', 'ي'];
@@ -10,8 +10,8 @@ export default function Game({ room, isArabic }) {
   const [submitted, setSubmitted] = useState(false);
   const inputsRef = useRef({});
 
-  const currentPlayer = room.players.find(p => p.id === socket.id);
-  const isMyTurn = room.players[room.currentTurnIndex]?.id === socket.id;
+  const currentPlayer = room.players.find(p => p.id === playerId);
+  const isMyTurn = room.players[room.currentTurnIndex]?.id === playerId;
   const turnPlayer = room.players[room.currentTurnIndex];
 
   const standardColumns = isArabic 
@@ -89,13 +89,13 @@ export default function Game({ room, isArabic }) {
   return (
     <div style={{ padding: '2rem 0' }}>
       <div className="flex-between fade-in-up" style={{ marginBottom: '2rem' }}>
-        <div className="glass-panel flex-center pulse-glow" style={{ width: '100px', height: '100px', borderRadius: '50%', padding: 0 }}>
-          <span style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>
+        <div className="glass-panel flex-center pulse-glow float" style={{ width: '100px', height: '100px', borderRadius: '50%', padding: 0 }}>
+          <span className="glow-text" style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>
             {room.round.letter}
           </span>
         </div>
 
-        <div className="glass-panel flex-center" style={{ gap: '1rem', padding: '1rem 2rem' }}>
+        <div className={`glass-panel flex-center ${timeLeft <= 10 ? 'timer-critical' : ''}`} style={{ gap: '1rem', padding: '1rem 2rem' }}>
           <Clock size={32} color={timeLeft <= 10 ? 'var(--danger-color)' : 'white'} />
           <span style={{ 
             fontSize: '2.5rem', 

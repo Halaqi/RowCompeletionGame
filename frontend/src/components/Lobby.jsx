@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { socket } from '../socket';
+import { socket, playerId } from '../socket';
 import { Users, Clock, Plus, Play, Copy, CheckCircle2, QrCode } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import Game from './Game';
@@ -32,8 +32,18 @@ export default function Lobby({ isArabic }) {
       setRoom(updatedRoom);
     });
 
+    // Rejoin the room silently in case this was a page refresh
+    if (socket.connected) {
+      socket.emit('rejoinRoom', { roomId });
+    } else {
+      socket.on('connect', () => {
+        socket.emit('rejoinRoom', { roomId });
+      });
+    }
+
     return () => {
       socket.off('roomUpdated');
+      socket.off('connect');
     };
   }, []);
 
@@ -53,7 +63,7 @@ export default function Lobby({ isArabic }) {
     );
   }
 
-  const currentPlayer = room.players.find(p => p.id === socket.id);
+  const currentPlayer = room.players.find(p => p.id === playerId);
   const isHost = currentPlayer?.isHost;
 
   const handleTimeChange = (e) => {
@@ -150,8 +160,8 @@ export default function Lobby({ isArabic }) {
               borderLeft: player.isHost ? '4px solid var(--primary-color)' : 'none',
               borderRight: (isArabic && player.isHost) ? '4px solid var(--primary-color)' : 'none'
             }}>
-              <span style={{ fontWeight: player.id === socket.id ? 'bold' : 'normal' }}>
-                {player.name} {player.id === socket.id && (isArabic ? '(أنت)' : '(You)')}
+              <span style={{ fontWeight: player.id === playerId ? 'bold' : 'normal' }}>
+                {player.name} {player.id === playerId && (isArabic ? '(أنت)' : '(You)')}
               </span>
               {player.isHost && <span style={{ fontSize: '0.8rem', color: 'var(--primary-color)' }}>{isArabic ? 'المضيف' : 'HOST'}</span>}
             </li>
@@ -179,7 +189,7 @@ export default function Lobby({ isArabic }) {
                   padding: '0.75rem',
                   borderRadius: '8px',
                   border: room.settings.timeLimit === time ? '2px solid var(--primary-color)' : '1px solid rgba(255,255,255,0.1)',
-                  background: room.settings.timeLimit === time ? 'rgba(99, 102, 241, 0.2)' : 'rgba(0,0,0,0.2)',
+                  background: room.settings.timeLimit === time ? 'rgba(168, 85, 247, 0.15)' : 'rgba(0,0,0,0.2)',
                   color: 'white',
                   cursor: isHost ? 'pointer' : 'default',
                   opacity: (!isHost && room.settings.timeLimit !== time) ? 0.5 : 1
@@ -206,17 +216,17 @@ export default function Lobby({ isArabic }) {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
             {room.settings.customColumns.map((col, index) => (
               <div key={index} style={{ 
-                background: 'rgba(236, 72, 153, 0.2)', 
+                background: 'rgba(255, 145, 0, 0.15)', 
                 padding: '0.5rem 1rem', 
                 borderRadius: '20px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                border: '1px solid rgba(236, 72, 153, 0.5)'
+                border: '1px solid rgba(255, 145, 0, 0.4)'
               }}>
                 {col}
                 {isHost && (
-                  <button onClick={() => handleRemoveColumn(index)} style={{ background: 'none', border: 'none', color: '#fca5a5', cursor: 'pointer', fontSize: '1.2rem', lineHeight: 1 }}>
+                  <button onClick={() => handleRemoveColumn(index)} style={{ background: 'none', border: 'none', color: '#ff9100', cursor: 'pointer', fontSize: '1.2rem', lineHeight: 1 }}>
                     &times;
                   </button>
                 )}
