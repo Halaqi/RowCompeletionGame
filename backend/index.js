@@ -4,15 +4,40 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
+
+const allowedOrigins = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '*')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin: allowedOrigins.includes('*') ? '*' : allowedOrigins,
+  methods: ['GET', 'POST']
+};
+
+app.use(cors(corsOptions));
+
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    service: 'rowcomplete-backend',
+    socketPath: '/socket.io/'
+  });
+});
+
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    uptime: process.uptime(),
+    connections: io.engine.clientsCount
+  });
+});
 
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
+  cors: corsOptions,
+  transports: ['polling', 'websocket']
 });
 
 // Store rooms in memory
