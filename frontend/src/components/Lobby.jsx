@@ -103,6 +103,19 @@ export default function Lobby({ isArabic }) {
     }
   };
 
+  const getLocalizedColumn = (colName) => {
+    const ar = ['اسم', 'حيوان', 'نبات', 'جماد', 'بلاد/عاصمة'];
+    const en = ['Name', 'Animal', 'Plant', 'Object', 'Country/Capital'];
+    if (isArabic) {
+      const idx = en.indexOf(colName);
+      if (idx !== -1) return ar[idx];
+    } else {
+      const idx = ar.indexOf(colName);
+      if (idx !== -1) return en[idx];
+    }
+    return colName;
+  };
+
   if (room.status === 'playing') {
     return <Game room={room} isArabic={isArabic} />;
   }
